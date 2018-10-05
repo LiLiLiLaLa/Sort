@@ -27,19 +27,49 @@ void InsertSort(int *arr, int n)
 {
     int index = 0;
     assert(arr);
-    for(index=0;index<n;index++)
+    for(index = 1; index < n; index++)
     {
         //将当前数据往前插入
         int end = index-1;
         int temp = arr[index];
-        while(end>=0 && temp<arr[end])
+        while(end >= 0 && temp < arr[end])
         {
             arr[end+1] = arr[end];
             --end;
         }
-
         arr[end+1] = temp;
     }
+}
+
+//插入排序
+void InsertSort_OP(int *arr, int n)
+{
+	int index = 0;
+	
+	for (index = 1; index < n; index++)
+	{
+		int temp = arr[index];
+		//通过二分查找 找出待插入元素的位置
+		int left = 0;
+		int right = index - 1;
+		while (left <= right)
+		{
+			int mid = left + ((right - left) >> 1);
+			if (temp >= arr[mid])
+				left = mid + 1;
+			else
+				right = mid - 1;
+		}
+		//将当前数据往前插入
+		int end = index - 1;
+		//搬移元素
+		while (end >= left)
+		{
+			arr[end + 1] = arr[end];
+			--end;
+		}
+		arr[left] = temp;
+	}
 }
 
 //希尔排序
@@ -70,24 +100,19 @@ void SelectSort(int *arr, int n)
 {
     int index = 0;
     assert(arr);
-    for(index=0;index<n;index++)
-    {
-        int min = index;
-        int i = 0;
-        for(i=index+1;i<n;i++)
-        {
-            if(arr[min]>arr[i])
-            {
-                min = i;
-            }
-        }
-        if(min != index)
-        {
-            int tmp = arr[index];
-            arr[index] = arr[min];
-            arr[min] = tmp;
-        }
-    }
+	for (index = 0; index < n; index++)
+	{
+		int maxPos = 0;
+		int i = 1;
+		//找最大元素的位置
+		for (i = 1; i < n-index; i++)
+		{
+			if (arr[i] > arr[maxPos])
+				maxPos = i;
+		}
+		if (maxPos != (n - index - 1))
+			Swap(&arr[maxPos], &arr[n-index-1]);
+	}
 }
 
 //选择排序的优化
@@ -138,35 +163,33 @@ void HeapAdjust(int *arr,int root,int len)
         }
         // 1.若大的孩子节点大于根节点,则不再需要调整,跳出循环
         // 2.否则,交换孩子节点和根节点,将根节点继续往下调整
-        if(arr[child] > arr[root])
-        {
-            Swap(&arr[child], &arr[root]);
-            root = child;
-            child = child*2 +1;
-        }
-        else
-        {
-            break;
-        }
-
+		if (arr[child] > arr[root])
+		{
+			Swap(&arr[child], &arr[root]);
+			root = child;
+			child = child * 2 + 1;
+		}
+		else
+			return;
     }
 }
 //堆排序
 void HeapSort(int *arr, int len)
 {
 
-    int i = 0;
+	int i = (len - 2)>>1;
     assert(arr);
     //建堆
-    for(i=(len-2)/2; i>=0; i--)
+    for( ; i>=0; i--)
     {
         HeapAdjust(arr, i, len);
     }
-    //向下调整
+    //排序
     for(i = len-1;i > 0; i--)
     {
         Swap(&arr[i], &arr[0]);
         HeapAdjust(arr, 0, i);
+		//HeapAdjust(arr, i, 0);
     }
 }
 
@@ -194,21 +217,25 @@ void BubbleSort(int* arr, int len)
 
 
 //快速排序
-int PartSort(int *a, int begin, int end)
+int PartSort(int *a, int left, int right)
 {
-	int key = a[end];
-	int keyindex = end;
+	int key = a[right];
+	int begin = left;
+	int end = right - 1;
 	while (begin < end)
 	{
-		//找大的
+		//找比基准值大的
 		while ((begin < end) && (a[begin] <= key))
-			++begin;
-		//找小的
+			begin++;
+		//找比基准值小的
 		while ((begin < end) && (a[end] >= key))
-			--end;
-		Swap(&a[begin], &a[end]);
+			end--;
+		if (begin<end)
+			Swap(&a[begin], &a[end]);
 	}
-	Swap(&a[begin], &a[keyindex]);
+	//最后别忘记把基准值和相遇点交换
+	if (begin != right - 1)
+		Swap(&a[begin], &a[right-1]);
 	return begin;
 }
 void QuickSort(int *a, int left, int right)
@@ -217,7 +244,7 @@ void QuickSort(int *a, int left, int right)
 	if (left >= right)
 		return;
 	int div = PartSort(a, left, right);
-	QuickSort(a, left, div - 1);
+	QuickSort(a, left, div);
 	QuickSort(a, div + 1, right);
 }
 //挖坑法
@@ -404,9 +431,9 @@ void MergeSort(int *a, int n)
 	free(tmp);
 
 }
-//排序稳定性的理解
+//稳定排序的理解
 int main(int argc, char* argv[]) {
-    int array[]={20,6,18,3,5,11,19,4,2,6,1};
+    int array[]={3,5,11,19,4};
     int len = sizeof(array)/sizeof(int);
 	int i = 0;
 	//clock_t start, finish;
@@ -418,20 +445,20 @@ int main(int argc, char* argv[]) {
 	//	arr[i] = i;
 	//}
 	//start = clock();
-    //InsertSort(array,len);
+    //InsertSort_OP(array,len);
     //ShellSort(array,len);
     //SelectSort(array,len);
     //SelectSort_OP(array,len);
     //HeapSort(array,len);
     // BubbleSort(array,len);
-	//QuickSort3(arr, 0, 100000);
+	QuickSort(array, 0, len);
 	//QuickSort4(arr, 0, 10000);
 	//QuickSort4(array, 0, len - 1);
 	//finish = clock();
 	//printf("ret = %f\n",(double)(finish-start));
 	//PrintArray(arr, 100000);
 	//QuickSortNonR(array, 0, len-1);
-	MergeSort(array, len);
+	//MergeSort(array, len);
 	PrintArray(array, len);
 
 	system("pause");
